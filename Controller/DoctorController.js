@@ -4,6 +4,8 @@ const jwt = require("jsonwebtoken");
 const nodemailer = require("nodemailer");
 const transporter = require("../mailData/mailData");
 var uuid = require("uuid");
+const Email = require("email-templates");
+const { MailtrapClient } = require("mailtrap");
 
 exports.register = (req, res) => {
   const reqBody = req.body;
@@ -111,31 +113,65 @@ exports.addPending = (req, res, next) => {
         phoneNumber: req.body.phoneNumber,
         Date: new Date(Date.now()).toUTCString(),
       });
-
+      const person = { namePrename: req.body.namePrename };
       doctor.save((err, doc) => {
         if (err) {
           res.status(400).send({
             message: err,
           });
         }
+        if (doc) {
+          const TOKEN =
+            "eyJhbGciOiJIUzUxMiJ9.eyJkYXRhIjp7InRva2VuIjoiODUwZDZmMzFjNGEyNGNkNjQwNGQ0MTZiYTZiZmY5YTYifX0.vevgXJtvI40TOtl7oKjZsSSxVarnSpWo2y8dqqB-_tzwrIvAdZVMiFlnHtn1PxOVS8RkDb0TMFIAXkcjaJxF5Q";
+          const SENDER_EMAIL = "saskoussdabbsask@gmail.com";
+          const RECIPIENT_EMAIL = "oussema.dabboussi99@gmail.com";
+          const client = new MailtrapClient({ token: TOKEN });
+          const sender = { name: "Mailtrap Test", email: SENDER_EMAIL };
 
-        const mailOptions = {
-          from: "oussema.dabboussi99@gmail.com",
-          to: req.body.email,
-          subject: "Response to Patient",
-          text: "your request is added with success wait until doctor give you an appointment ",
-        };
-        transporter.sendMail(mailOptions, (err, info) => {
-          if (err) {
-            console.log(err);
-          } else {
-            res.status(200).send({
-              message: "added",
-              doctor: doc,
-              EmailInfo: info.response,
-            });
-          }
-        });
+          client
+            .send({
+              from: sender,
+              to: [{ email: RECIPIENT_EMAIL }],
+              subject: "Hello from Mailtrap!",
+              text: "Welcome to Mailtrap Sending!",
+            })
+            .then((res) =>
+              res.send({
+                status: 200,
+                message: "added",
+              })
+            )
+            .catch((err) =>
+              res.send({
+                status: 401,
+                message: err,
+              })
+            );
+          // const email = new Email({
+          //   message: {
+          //     from: "saskoussdabbsask@gmail.com",
+          //   },
+          //   send: true,
+          //   transport: {
+          //     host: "smtp.mailtrap.io",
+          //     port: 2525,
+          //     ssl: false,
+          //     tls: true,
+          //     auth: {
+          //       user: "Oussema Dabboussi", // your Mailtrap username
+          //       pass: "123456789QQq?sask", //your Mailtrap password
+          //     },
+          //   },
+          // });
+          // const resp = email.send({
+          //   template: "welcome",
+          //   message: {
+          //     to: "oussema.dabboussi99@gmail.com",
+          //   },
+          //   locals: person,
+          // });
+          // console.log(resp);
+        }
       });
     }
   });
